@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Neon Simple Calculator</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: #121212;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: 'Orbitron', monospace, sans-serif;
+    color: #0ff;
+  }
+  .calculator {
+    background: #1e1e1e;
+    border-radius: 20px;
+    width: 280px;
+    padding: 20px;
+    box-shadow: 0 0 15px #0ff, 0 0 40px #0ff inset;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .display {
+    background: #000;
+    width: 100%;
+    font-size: 2.5rem;
+    height: 60px;
+    color: #0ff;
+    line-height: 60px;
+    padding: 0 15px;
+    border-radius: 12px;
+    text-align: right;
+    overflow-x: auto;
+    box-shadow: inset 0 0 10px #0ff;
+    user-select: none;
+    margin-bottom: 20px;
+  }
+  .buttons {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    width: 100%;
+  }
+  button {
+    background: #121212;
+    border: 2px solid #0ff;
+    border-radius: 15px;
+    color: #0ff;
+    font-size: 1.5rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+    user-select: none;
+    padding: 18px 0;
+    text-align: center;
+    box-shadow: 0 0 6px #0ff;
+  }
+  button:hover {
+    background: #0ff;
+    color: #121212;
+    box-shadow: 0 0 20px #0ff, 0 0 40px #0ff inset;
+  }
+  button.operator {
+    color: #f39c12;
+    border-color: #f39c12;
+    box-shadow: 0 0 6px #f39c12;
+  }
+  button.operator:hover {
+    background: #f39c12;
+    color: #121212;
+    box-shadow: 0 0 20px #f39c12, 0 0 40px #f39c12 inset;
+  }
+  button.equal {
+    grid-column: span 3;
+    background: #e74c3c;
+    border-color: #e74c3c;
+    color: #fff;
+    font-size: 1.7rem;
+    box-shadow: 0 0 10px #e74c3c;
+  }
+  button.equal:hover {
+    background: #c0392b;
+    border-color: #c0392b;
+    box-shadow: 0 0 25px #e74c3c, 0 0 50px #e74c3c inset;
+  }
+  button.clear {
+    grid-column: span 3;
+    background: #34495e;
+    border-color: #34495e;
+    color: #95a5a6;
+    font-size: 1.3rem;
+  }
+  button.clear:hover {
+    background: #2c3e50;
+    border-color: #2c3e50;
+    color: #ecf0f1;
+    box-shadow: none;
+  }
+  @media (max-width: 350px) {
+    .calculator {
+      width: 90vw;
+      padding: 15px;
+    }
+    button {
+      font-size: 1.2rem;
+      padding: 14px 0;
+    }
+    .display {
+      font-size: 2rem;
+      height: 50px;
+      line-height: 50px;
+      padding: 0 12px;
+    }
+  }
+</style>
+</head>
+<body>
+  <div class="calculator" role="application" aria-label="Neon Simple Calculator">
+    <div class="display" id="display" aria-live="polite" aria-atomic="true" tabindex="0">0</div>
+    <div class="buttons">
+      <button class="clear" id="clear" aria-label="Clear all">CLEAR</button>
+
+      <button aria-label="Seven" data-value="7">7</button>
+      <button aria-label="Eight" data-value="8">8</button>
+      <button aria-label="Nine" data-value="9">9</button>
+
+      <button aria-label="Four" data-value="4">4</button>
+      <button aria-label="Five" data-value="5">5</button>
+      <button aria-label="Six" data-value="6">6</button>
+
+      <button aria-label="One" data-value="1">1</button>
+      <button aria-label="Two" data-value="2">2</button>
+      <button aria-label="Three" data-value="3">3</button>
+
+      <button aria-label="Zero" data-value="0" style="grid-column: span 3;">0</button>
+
+      <button aria-label="Decimal point" data-value=".">.</button>
+      <button aria-label="Add" class="operator" data-value="+">+</button>
+      <button aria-label="Subtract" class="operator" data-value="-">−</button>
+
+      <button aria-label="Multiply" class="operator" data-value="*">×</button>
+      <button aria-label="Divide" class="operator" data-value="/">÷</button>
+
+      <button aria-label="Equals" class="equal" id="equals">=</button>
+    </div>
+  </div>
+
+<script>
+  (() => {
+    const display = document.getElementById('display');
+    const buttons = document.querySelectorAll('.buttons button');
+    const clearBtn = document.getElementById('clear');
+    const equalsBtn = document.getElementById('equals');
+
+    let currentInput = '0';
+
+    const isOperator = c => ['+', '-', '*', '/'].includes(c);
+
+    function updateDisplay() {
+      display.textContent = currentInput;
+      display.focus();
+    }
+
+    function appendToInput(char) {
+      if (currentInput === '0' && char !== '.') {
+        currentInput = char;
+      } else {
+        currentInput += char;
+      }
+    }
+
+    function handleButtonClick(e) {
+      const value = e.target.getAttribute('data-value');
+      if (!value) return;
+
+      const lastChar = currentInput.slice(-1);
+
+      if (isOperator(value)) {
+        if (currentInput.length === 0) return;
+        if (isOperator(lastChar)) {
+          currentInput = currentInput.slice(0, -1) + value;
+        } else {
+          currentInput += value;
+        }
+      } else if (value === '.') {
+        let lastOperatorIndex = -1;
+        for (let i = currentInput.length-1; i >= 0; i--) {
+          if (isOperator(currentInput[i])) {
+            lastOperatorIndex = i;
+            break;
+          }
+        }
+        let lastSegment = currentInput.slice(lastOperatorIndex + 1);
+        if (!lastSegment.includes('.')) {
+          currentInput += '.';
+        }
+      } else {
+        appendToInput(value);
+      }
+      updateDisplay();
+    }
+
+    function clearInput() {
+      currentInput = '0';
+      updateDisplay();
+    }
+
+    function calculate() {
+      try {
+        if (/[^0-9+\-*/.() ]/.test(currentInput)) {
+          alert('Invalid input');
+          return;
+        }
+        let result = Function('"use strict";return (' + currentInput + ')')();
+        if (typeof result === 'number' && isFinite(result)) {
+          currentInput = String(result);
+        } else {
+          alert('Calculation error');
+          currentInput = '0';
+        }
+      } catch {
+        alert('Invalid expression');
+        currentInput = '0';
+      }
+      updateDisplay();
+    }
+
+    buttons.forEach(btn => {
+      if (!btn.id) {
+        btn.addEventListener('click', handleButtonClick);
+      }
+    });
+    clearBtn.addEventListener('click', clearInput);
+    equalsBtn.addEventListener('click', calculate);
+
+    window.addEventListener('keydown', e => {
+      if ((e.key >= '0' && e.key <= '9') || ['+', '-', '*', '/', '.'].includes(e.key)) {
+        e.preventDefault();
+        handleButtonClick({target: {getAttribute: () => e.key}});
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        calculate();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        clearInput();
+      }
+    });
+
+    updateDisplay();
+  })();
+</script>
+</body>
+</html>
